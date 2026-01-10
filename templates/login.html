@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Access</title>
+    <style>
+        :root {
+            --bg: #111;
+            --card: #1a1a1a;
+            --text: #eee;
+            --accent: #e53e3e;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+        h2 { margin-bottom: 1.5rem; font-weight: 600; font-size: 1.25rem; }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #252525;
+            color: white;
+            margin-bottom: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--accent); }
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .error { color: #fc8181; font-size: 0.875rem; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>System Access</h2>
+        <form method="POST">
+            <input type="password" name="password" placeholder="Enter Access Key" required autofocus>
+            <button type="submit">Unlock</button>
+        </form>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>
