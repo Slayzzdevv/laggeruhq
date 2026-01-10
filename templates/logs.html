@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Moon Lagger // Logs</title>
+      <style>
+            :root {
+                  --bg: #0f0f12;
+                  --sidebar: #141418;
+                  --card: #1c1c22;
+                  --primary: #fff;
+                  --secondary: #a0a0b0;
+                  --accent: #5e6aff;
+                  --danger: #cf3d3d;
+            }
+
+            body {
+                  background: var(--bg);
+                  color: var(--primary);
+                  font-family: 'Inter', sans-serif;
+                  margin: 0;
+                  display: flex;
+                  height: 100vh;
+            }
+
+            .sidebar {
+                  width: 250px;
+                  background: var(--sidebar);
+                  padding: 1.5rem;
+                  display: flex;
+                  flex-direction: column;
+                  border-right: 1px solid #2a2a35;
+            }
+
+            .brand {
+                  font-size: 1.2rem;
+                  font-weight: 800;
+                  margin-bottom: 2rem;
+                  color: var(--primary);
+            }
+
+            .brand span {
+                  color: var(--accent);
+            }
+
+            .menu-item {
+                  padding: 0.8rem 1rem;
+                  color: var(--secondary);
+                  text-decoration: none;
+                  border-radius: 8px;
+                  margin-bottom: 0.5rem;
+                  transition: 0.2s;
+                  font-size: 0.9rem;
+            }
+
+            .menu-item:hover,
+            .menu-item.active {
+                  background: #2a2a35;
+                  color: var(--primary);
+            }
+
+            .logout {
+                  margin-top: auto;
+                  color: var(--danger);
+            }
+
+            .main {
+                  flex: 1;
+                  padding: 2rem;
+                  overflow-y: auto;
+            }
+
+            .header {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 2rem;
+            }
+
+            .header h1 {
+                  font-size: 1.5rem;
+                  font-weight: 600;
+                  margin: 0;
+            }
+
+            .log-container {
+                  background: var(--card);
+                  border-radius: 12px;
+                  overflow: hidden;
+            }
+
+            table {
+                  width: 100%;
+                  border-collapse: collapse;
+            }
+
+            th {
+                  text-align: left;
+                  padding: 1rem;
+                  background: #25252e;
+                  color: var(--secondary);
+                  font-size: 0.85rem;
+            }
+
+            td {
+                  padding: 1rem;
+                  border-bottom: 1px solid #2a2a35;
+                  font-size: 0.9rem;
+            }
+
+            tr:last-child td {
+                  border-bottom: none;
+            }
+
+            .badge {
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 0.75rem;
+                  font-weight: 600;
+            }
+
+            .badge-info {
+                  background: #3d8acf33;
+                  color: #3d8acf;
+            }
+
+            .badge-warn {
+                  background: #cf9b3d33;
+                  color: #cf9b3d;
+            }
+
+            .badge-cmd {
+                  background: #5e6aff33;
+                  color: #5e6aff;
+            }
+
+            .no-logs {
+                  padding: 2rem;
+                  text-align: center;
+                  color: var(--secondary);
+            }
+      </style>
+</head>
+
+<body>
+      <div class="sidebar">
+            <div class="brand">MOON <span>PANEL</span></div>
+            <a href="/dashboard" class="menu-item">Dashboard</a>
+            <a href="/logs" class="menu-item active">Logs</a>
+            <a href="/settings" class="menu-item">Settings</a>
+            <a href="/logout" class="menu-item logout">Logout</a>
+      </div>
+
+      <div class="main">
+            <div class="header">
+                  <h1>System Logs</h1>
+                  <button onclick="clearLogs()"
+                        style="border:none; background:#2a2a35; color:var(--secondary); padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">Clear
+                        Logs</button>
+            </div>
+
+            <div class="log-container">
+                  <table>
+                        <thead>
+                              <tr>
+                                    <th width="120">Time</th>
+                                    <th width="100">Type</th>
+                                    <th>Message</th>
+                              </tr>
+                        </thead>
+                        <tbody>
+                              {% for log in logs %}
+                              <tr>
+                                    <td style="color:var(--secondary);">{{ log.time }}</td>
+                                    <td>
+                                          <span class="badge badge-{{ log.type|lower }}">{{ log.type }}</span>
+                                    </td>
+                                    <td>{{ log.msg }}</td>
+                              </tr>
+                              {% else %}
+                              <tr>
+                                    <td colspan="3" class="no-logs">No activity recorded yet.</td>
+                              </tr>
+                              {% endfor %}
+                        </tbody>
+                  </table>
+            </div>
+      </div>
+
+      <script>
+            function clearLogs() {
+                  if (confirm('Clear all logs?')) {
+                        fetch('/api/clear_logs', { method: 'POST' }).then(() => window.location.reload());
+                  }
+            }
+            // Auto refresh logs every 5s
+            setTimeout(() => window.location.reload(), 5000);
+      </script>
+</body>
+
+</html>

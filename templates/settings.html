@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Moon Lagger // Settings</title>
+      <style>
+            :root {
+                  --bg: #0f0f12;
+                  --sidebar: #141418;
+                  --card: #1c1c22;
+                  --primary: #fff;
+                  --secondary: #a0a0b0;
+                  --accent: #5e6aff;
+                  --danger: #cf3d3d;
+            }
+
+            body {
+                  background: var(--bg);
+                  color: var(--primary);
+                  font-family: 'Inter', sans-serif;
+                  margin: 0;
+                  display: flex;
+                  height: 100vh;
+            }
+
+            .sidebar {
+                  width: 250px;
+                  background: var(--sidebar);
+                  padding: 1.5rem;
+                  display: flex;
+                  flex-direction: column;
+                  border-right: 1px solid #2a2a35;
+            }
+
+            .brand {
+                  font-size: 1.2rem;
+                  font-weight: 800;
+                  margin-bottom: 2rem;
+                  color: var(--primary);
+            }
+
+            .brand span {
+                  color: var(--accent);
+            }
+
+            .menu-item {
+                  padding: 0.8rem 1rem;
+                  color: var(--secondary);
+                  text-decoration: none;
+                  border-radius: 8px;
+                  margin-bottom: 0.5rem;
+                  transition: 0.2s;
+                  font-size: 0.9rem;
+            }
+
+            .menu-item:hover,
+            .menu-item.active {
+                  background: #2a2a35;
+                  color: var(--primary);
+            }
+
+            .logout {
+                  margin-top: auto;
+                  color: var(--danger);
+            }
+
+            .main {
+                  flex: 1;
+                  padding: 2rem;
+            }
+
+            .header {
+                  margin-bottom: 2rem;
+            }
+
+            .header h1 {
+                  font-size: 1.5rem;
+                  font-weight: 600;
+                  margin: 0;
+            }
+
+            .card {
+                  background: var(--card);
+                  border-radius: 12px;
+                  padding: 2rem;
+                  max-width: 600px;
+                  margin-bottom: 2rem;
+            }
+
+            .card h3 {
+                  margin-top: 0;
+                  margin-bottom: 1.5rem;
+                  color: var(--primary);
+            }
+
+            .form-group {
+                  margin-bottom: 1.5rem;
+            }
+
+            .form-label {
+                  display: block;
+                  color: var(--secondary);
+                  margin-bottom: 0.5rem;
+                  font-size: 0.9rem;
+            }
+
+            .form-input {
+                  width: 100%;
+                  padding: 0.8rem;
+                  background: #25252e;
+                  border: 1px solid #333;
+                  border-radius: 6px;
+                  color: white;
+                  box-sizing: border-box;
+            }
+
+            .btn {
+                  padding: 0.8rem 1.5rem;
+                  border-radius: 6px;
+                  border: none;
+                  font-weight: 600;
+                  cursor: pointer;
+                  color: white;
+            }
+
+            .btn-danger {
+                  background: var(--danger);
+            }
+      </style>
+</head>
+
+<body>
+      <div class="sidebar">
+            <div class="brand">MOON <span>PANEL</span></div>
+            <a href="/dashboard" class="menu-item">Dashboard</a>
+            <a href="/logs" class="menu-item">Logs</a>
+            <a href="/settings" class="menu-item active">Settings</a>
+            <a href="/logout" class="menu-item logout">Logout</a>
+      </div>
+
+      <div class="main">
+            <div class="header">
+                  <h1>Settings</h1>
+            </div>
+
+            <div class="card">
+                  <h3>Security</h3>
+                  <div class="form-group">
+                        <label class="form-label">Current Admin Key</label>
+                        <input type="text" class="form-input" value="{{ admin_key }}" readonly
+                              style="opacity: 0.7; cursor: not-allowed;">
+                        <p style="color:var(--secondary); font-size:0.8rem; margin-top:0.5rem;">The key is hardcoded in
+                              the server config for security.</p>
+                  </div>
+            </div>
+
+            <div class="card">
+                  <h3>Danger Zone</h3>
+                  <div class="form-group">
+                        <p style="color:var(--secondary); margin-bottom:1rem;">Restarting the server will wipe all
+                              active connections and logs.</p>
+                        <button class="btn btn-danger">No Action Available (Hosted on Render)</button>
+                  </div>
+            </div>
+      </div>
+</body>
+
+</html>
